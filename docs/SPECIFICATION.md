@@ -130,7 +130,7 @@ O sistema atual possui:
 
 ### 1.3 Impact
 
-Sem um Do Anything Agent:
+Sem um Limitless Agent:
 - 70% do potencial do ecossistema é subutilizado
 - Tarefas complexas requerem supervisão constante
 - Sem continuidade entre sessões
@@ -235,7 +235,7 @@ Sem um Do Anything Agent:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     DO ANYTHING AGENT (DAA) v1.0                            │
+│                     LIMITLESS AGENT v1.0                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -394,7 +394,7 @@ Persiste estado em:
 ├── commands/
 │   └── do-anything.md              # Main command definition
 ├── agents/
-│   ├── do-anything-agent.md        # Core DAA agent spec
+│   ├── limitless-agent.md        # Core Limitless agent spec
 │   └── ... (27 specialized agents)
 ├── skills/
 │   └── ... (27 skills)
@@ -538,7 +538,7 @@ User Goal
 ### 5.4 Database Schema
 
 ```sql
--- Supabase/PostgreSQL Schema for DAA State Management
+-- Supabase/PostgreSQL Schema for Limitless Agent State Management
 -- Full schema with pgvector: sql/schema.sql
 
 -- Executions table
@@ -634,7 +634,7 @@ CREATE INDEX idx_metrics_name ON metrics(metric_name);
 
 | Task | Description | Deliverable |
 |------|-------------|-------------|
-| 2.1 | Create DAA agent definition | `.claude/agents/do-anything-agent.md` |
+| 2.1 | Create Limitless agent definition | `.claude/agents/limitless-agent.md` |
 | 2.2 | Implement agent selection logic | `agent-router.js` |
 | 2.3 | Integrate with Task tool | Subagent invocation |
 | 2.4 | Goal decomposition via agent | Use task-decomposition-expert |
@@ -804,7 +804,7 @@ CREATE INDEX idx_metrics_name ON metrics(metric_name);
 
 | Term | Definition |
 |------|------------|
-| DAA | Do Anything Agent |
+| Limitless | Limitless Agent (NZT Protocol) |
 | Ralph Loop | Autonomous iteration pattern by Geoffrey Huntley |
 | MCP | Model Context Protocol |
 | Subagent | Specialized agent invoked by main agent |

@@ -90,14 +90,14 @@ Este documento consolida a pesquisa extensiva realizada sobre as melhores pratic
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                          DO ANYTHING AGENT (DAA) v1.0                               │
+│                          LIMITLESS AGENT v1.0                               │
 │                     "The Most Complete, Reliable, and Economical"                   │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                     │
 │  ┌───────────────────────────────────────────────────────────────────────────────┐ │
 │  │                           LAYER 0: INTERFACE                                  │ │
 │  │                                                                               │ │
-│  │   /do-anything "goal"          do-anything.sh            REST API (future)   │ │
+│  │   /limitless "goal"          limitless.sh            REST API (future)   │ │
 │  │   └── Claude Code CLI          └── Bash Wrapper          └── HTTP Server     │ │
 │  │                                                                               │ │
 │  └───────────────────────────────────────────────────────────────────────────────┘ │
@@ -218,7 +218,7 @@ Este documento consolida a pesquisa extensiva realizada sobre as melhores pratic
 ```
                                     USER
                                       │
-                                      │ "/do-anything Build a REST API with auth"
+                                      │ "/limitless Build a REST API with auth"
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │                                   ENTRY POINT                                        │
@@ -259,7 +259,7 @@ Este documento consolida a pesquisa extensiva realizada sobre as melhores pratic
 │  3. EXECUTE (Parallel where possible)                                                │
 │     ┌──────────────────────────────────────────────────────────────────────────┐    │
 │     │                                                                          │    │
-│     │  tmux session: daa-1736617200                                            │    │
+│     │  tmux session: limitless-1736617200                                            │    │
 │     │  ┌──────────┐  ┌──────────┐  ┌──────────┐                               │    │
 │     │  │ Pane 0   │  │ Pane 1   │  │ Pane 2   │                               │    │
 │     │  │ backend  │  │ backend  │  │ backend  │                               │    │
@@ -267,9 +267,9 @@ Este documento consolida a pesquisa extensiva realizada sobre as melhores pratic
 │     │  └──────────┘  └──────────┘  └──────────┘                               │    │
 │     │                                                                          │    │
 │     │  Git worktrees:                                                          │    │
-│     │  ├── /tmp/daa/worktree-1 (branch: daa/setup)                            │    │
-│     │  ├── /tmp/daa/worktree-2 (branch: daa/auth)                             │    │
-│     │  └── /tmp/daa/worktree-3 (branch: daa/crud)                             │    │
+│     │  ├── /tmp/limitless/worktree-1 (branch: daa/setup)                            │    │
+│     │  ├── /tmp/limitless/worktree-2 (branch: daa/auth)                             │    │
+│     │  └── /tmp/limitless/worktree-3 (branch: daa/crud)                             │    │
 │     │                                                                          │    │
 │     └──────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                      │
@@ -365,7 +365,7 @@ Este documento consolida a pesquisa extensiva realizada sobre as melhores pratic
 ### 4.1 Provider Configuration
 
 ```yaml
-# ~/.daa/llm-config.yaml
+# ~/.limitless/llm-config.yaml
 
 providers:
   # Primary: Claude (Anthropic)
@@ -602,7 +602,7 @@ function selectModel(complexity, rateStatus) {
 ### 6.1 SQLite Schema (State Management)
 
 ```sql
--- Primary state database: ~/.daa/state.db
+-- Primary state database: ~/.limitless/state.db
 
 -- Execution sessions
 CREATE TABLE executions (
@@ -695,7 +695,7 @@ import chromadb
 from chromadb.config import Settings
 
 class SemanticMemory:
-    def __init__(self, path="~/.daa/memory"):
+    def __init__(self, path="~/.limitless/memory"):
         self.client = chromadb.PersistentClient(
             path=path,
             settings=Settings(anonymized_telemetry=False)
@@ -795,7 +795,7 @@ class SemanticMemory:
 │  │                                                                             │   │
 │  │  Approval Channels:                                                         │   │
 │  │  ├─ CLI prompt (interactive mode)                                          │   │
-│  │  ├─ File-based (.daa-approve)                                              │   │
+│  │  ├─ File-based (.limitless-approve)                                              │   │
 │  │  └─ Webhook (Slack, email - future)                                        │   │
 │  │                                                                             │   │
 │  └─────────────────────────────────────────────────────────────────────────────┘   │
@@ -818,7 +818,7 @@ class SemanticMemory:
 
 ```bash
 #!/bin/bash
-# guardrails.sh - Safety controls for DAA
+# guardrails.sh - Safety controls for Limitless Agent
 
 # Configuration
 MAX_ITERATIONS=10
@@ -923,26 +923,26 @@ classify_risk() {
 ### 8.1 File Structure (Implemented)
 
 ```
-Projects/DoAnythingAgent/            # Main DAA project directory
+Projects/LimitlessAgent/             # Main Limitless project directory
 ├── README.md                        # [CREATED] Project documentation
 ├── DO-ANYTHING-AGENT-SPECIFICATION.md  # PRD/RFC
 ├── DO-ANYTHING-AGENT-ARCHITECTURE.md   # This document
 │
 ├── config/                          # [CREATED] Configuration files
-│   ├── settings.json                # Main DAA configuration
+│   ├── settings.json                # Main Limitless configuration
 │   ├── ollama.json                  # Ollama models config
 │   └── notifications.json           # Slack/Telegram config
 │
 ├── n8n/                             # [CREATED] n8n workflows
 │   └── workflows/
-│       ├── daa-monitor.json         # Monitoring workflow
-│       └── daa-notify.json          # Notification workflow
+│       ├── limitless-monitor.json         # Monitoring workflow
+│       └── limitless-notify.json          # Notification workflow
 │
 ├── sql/                             # [CREATED] Database
 │   └── schema.sql                   # Supabase/pgvector schema
 │
 ├── scripts/                         # [CREATED] Executables
-│   └── do-anything.sh               # Main entry point (chmod +x)
+│   └── limitless.sh               # Main entry point (chmod +x)
 │
 ├── src/                             # [PENDING] Implementation code
 │   ├── lib/                         # Core libraries
@@ -959,8 +959,8 @@ Projects/DoAnythingAgent/            # Main DAA project directory
 ```
 
 **n8n Endpoints**:
-- Monitor: `https://n8n.intentum.pro/webhook/daa-monitor`
-- Notify: `https://n8n.intentum.pro/webhook/daa-notify`
+- Monitor: `https://n8n.intentum.pro/webhook/limitless-monitor`
+- Notify: `https://n8n.intentum.pro/webhook/limitless-notify`
 
 **Supabase**: Cloud instance (schema in `sql/schema.sql`)
 
@@ -992,7 +992,7 @@ Projects/DoAnythingAgent/            # Main DAA project directory
 │  ──────────────────────────                                                         │
 │  Priority: P0                                                                        │
 │                                                                                      │
-│  ☐ 2.1 Create do-anything-agent.md                                                 │
+│  ☐ 2.1 Create limitless-agent.md                                                 │
 │  ☐ 2.2 Implement goal-decomposer.js                                                │
 │  ☐ 2.3 Implement agent-router.js                                                   │
 │  ☐ 2.4 Integrate Task tool for subagent invocation                                 │
@@ -1055,7 +1055,7 @@ Projects/DoAnythingAgent/            # Main DAA project directory
 │  ☐ 6.4 Add "recall similar goals" feature                                          │
 │  ☐ 6.5 Test cross-session continuity                                               │
 │                                                                                      │
-│  Exit Criteria: DAA learns from past executions                                     │
+│  Exit Criteria: Limitless learns from past executions                                     │
 │                                                                                      │
 │  ───────────────────────────────────────────────────────────────────────────────── │
 │                                                                                      │
@@ -1100,20 +1100,20 @@ export ANTHROPIC_API_KEY="sk-..."
 export GOOGLE_AI_API_KEY="..."
 export OPENAI_API_KEY="sk-..."
 
-# Initialize DAA
-./Automation/scripts/do-anything.sh init
+# Initialize Limitless Agent
+./Automation/scripts/limitless.sh init
 
 # Run your first goal
-/do-anything "Create a Python CLI tool that fetches weather data"
+/limitless "Create a Python CLI tool that fetches weather data"
 
 # Run with options
-/do-anything "Refactor auth module to use JWT" --max-iterations 5 --parallel
+/limitless "Refactor auth module to use JWT" --max-iterations 5 --parallel
 
 # Monitor execution
-/do-anything status
+/limitless status
 
 # View metrics
-/do-anything metrics --last 7d
+/limitless metrics --last 7d
 ```
 
 ---
@@ -1165,9 +1165,9 @@ export OPENAI_API_KEY="sk-..."
 | config/ollama.json | DONE |
 | config/notifications.json | DONE |
 | sql/schema.sql | DONE |
-| n8n/workflows/daa-monitor.json | DONE |
-| n8n/workflows/daa-notify.json | DONE |
-| scripts/do-anything.sh | DONE |
+| n8n/workflows/limitless-monitor.json | DONE |
+| n8n/workflows/limitless-notify.json | DONE |
+| scripts/limitless.sh | DONE |
 | Execute schema in Supabase | PENDING |
 | Import workflows in n8n | PENDING |
 | Configure Slack credentials | PENDING |
@@ -1179,7 +1179,7 @@ export OPENAI_API_KEY="sk-..."
 1. **Execute SQL schema** in Supabase dashboard
 2. **Import workflows** in n8n (https://n8n.intentum.pro)
 3. **Configure credentials** (Slack, Telegram)
-4. **Test do-anything.sh** with simple goal
+4. **Test limitless.sh** with simple goal
 5. **Begin Phase 2**: Agent Integration
 
 **Estimated Remaining Time**: 3-4 focused sessions

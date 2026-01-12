@@ -1,10 +1,10 @@
 {
-  "name": "DAA Notify - Do Anything Agent Notifications",
+  "name": "Limitless Notify - Agent Notifications",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "daa-notify",
+        "path": "limitless-notify",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "position": [0, 300],
       "typeVersion": 2,
-      "webhookId": "daa-notify-webhook"
+      "webhookId": "limitless-notify-webhook"
     },
     {
       "parameters": {
@@ -71,7 +71,7 @@
         "channelId": {
           "__rl": true,
           "mode": "name",
-          "value": "#daa-notifications"
+          "value": "#limitless-notifications"
         },
         "text": "=:rocket: *Task Started*\n*Goal*: {{ $json.goal }}\n*Execution ID*: `{{ $json.execution_id }}`\n*Time*: {{ $now.toISO() }}",
         "otherOptions": {
@@ -90,7 +90,7 @@
         "channelId": {
           "__rl": true,
           "mode": "name",
-          "value": "#daa-notifications"
+          "value": "#limitless-notifications"
         },
         "text": "=:white_check_mark: *Task Completed*\n*Goal*: {{ $json.goal }}\n*Duration*: {{ $json.duration }}\n*Iterations*: {{ $json.iterations }}",
         "otherOptions": {}
@@ -107,7 +107,7 @@
         "channelId": {
           "__rl": true,
           "mode": "name",
-          "value": "#daa-notifications"
+          "value": "#limitless-notifications"
         },
         "text": "=:x: *Task Failed*\n*Goal*: {{ $json.goal }}\n*Error*: {{ $json.error }}\n*Iteration*: {{ $json.iteration }}/{{ $json.max_iterations }}",
         "otherOptions": {}
@@ -124,7 +124,7 @@
         "channelId": {
           "__rl": true,
           "mode": "name",
-          "value": "#daa-notifications"
+          "value": "#limitless-notifications"
         },
         "text": "=:warning: *Approval Required*\n*Action*: {{ $json.action }}\n*Risk Level*: {{ $json.risk_level }}\n*Timeout*: {{ $json.timeout }} minutes\n\nReply with :+1: to approve or :-1: to reject",
         "otherOptions": {}
@@ -205,8 +205,8 @@
     },
     {
       "parameters": {
-        "content": "## DAA Notify Workflow\n\nSends notifications to Slack (primary) and Telegram (backup).\n\n### Events:\n- `task_started`: New task initiated\n- `task_completed`: Task finished successfully\n- `task_failed`: Task failed\n- `approval_required`: Human approval needed\n\n### Payload Example:\n```json\n{\n  \"event\": \"task_started\",\n  \"goal\": \"Create user authentication\",\n  \"execution_id\": \"uuid-here\"\n}\n```",
-        "height": 400,
+        "content": "## Limitless Agent Notify Workflow\n\n\"What if you could access 100% of your brain?\"\n\nSends notifications to Slack (primary) and Telegram (backup).\n\n### Events:\n- `task_started`: New task initiated\n- `task_completed`: Task finished successfully\n- `task_failed`: Task failed\n- `approval_required`: Human approval needed\n\n### Payload Example:\n```json\n{\n  \"event\": \"task_started\",\n  \"goal\": \"Create user authentication\",\n  \"execution_id\": \"uuid-here\"\n}\n```",
+        "height": 450,
         "width": 350,
         "color": 6
       },
@@ -262,7 +262,7 @@
     "templateCredsSetupCompleted": false
   },
   "tags": [
-    { "name": "DAA" },
+    { "name": "Limitless" },
     { "name": "Notifications" },
     { "name": "Slack" },
     { "name": "Telegram" }

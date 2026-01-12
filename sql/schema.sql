@@ -1,7 +1,8 @@
 -- ============================================================================
--- DO ANYTHING AGENT (DAA) - Supabase Schema
+-- LIMITLESS AGENT - Supabase Schema
 -- Version: 1.0.0
 -- Database: PostgreSQL + pgvector
+-- "What if you could access 100% of your brain?"
 -- ============================================================================
 
 -- Enable pgvector extension for embeddings
@@ -11,8 +12,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- CORE TABLES
 -- ============================================================================
 
--- Executions: Track each DAA run
-CREATE TABLE IF NOT EXISTS daa_executions (
+-- Executions: Track each Limitless Agent run
+CREATE TABLE IF NOT EXISTS limitless_executions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     goal TEXT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -35,13 +36,13 @@ CREATE TABLE IF NOT EXISTS daa_executions (
 );
 
 -- Create index for status queries
-CREATE INDEX idx_executions_status ON daa_executions(status);
-CREATE INDEX idx_executions_created ON daa_executions(created_at DESC);
+CREATE INDEX idx_executions_status ON limitless_executions(status);
+CREATE INDEX idx_executions_created ON limitless_executions(created_at DESC);
 
 -- Tasks: Individual subtasks within an execution
-CREATE TABLE IF NOT EXISTS daa_tasks (
+CREATE TABLE IF NOT EXISTS limitless_tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    execution_id UUID REFERENCES daa_executions(id) ON DELETE CASCADE,
+    execution_id UUID REFERENCES limitless_executions(id) ON DELETE CASCADE,
 
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -63,19 +64,19 @@ CREATE TABLE IF NOT EXISTS daa_tasks (
     completed_at TIMESTAMP WITH TIME ZONE,
     duration_ms INTEGER,
 
-    parent_task_id UUID REFERENCES daa_tasks(id),
+    parent_task_id UUID REFERENCES limitless_tasks(id),
     sequence_order INTEGER DEFAULT 0,
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for task queries
-CREATE INDEX idx_tasks_execution ON daa_tasks(execution_id);
-CREATE INDEX idx_tasks_status ON daa_tasks(status);
-CREATE INDEX idx_tasks_agent ON daa_tasks(agent_name);
+CREATE INDEX idx_tasks_execution ON limitless_tasks(execution_id);
+CREATE INDEX idx_tasks_status ON limitless_tasks(status);
+CREATE INDEX idx_tasks_agent ON limitless_tasks(agent_name);
 
 -- Memory: Persistent memory for context across sessions
-CREATE TABLE IF NOT EXISTS daa_memory (
+CREATE TABLE IF NOT EXISTS limitless_memory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     key VARCHAR(255) NOT NULL UNIQUE,
@@ -97,11 +98,11 @@ CREATE TABLE IF NOT EXISTS daa_memory (
 );
 
 -- Create index for memory lookups
-CREATE INDEX idx_memory_key ON daa_memory(key);
-CREATE INDEX idx_memory_type ON daa_memory(memory_type);
+CREATE INDEX idx_memory_key ON limitless_memory(key);
+CREATE INDEX idx_memory_type ON limitless_memory(memory_type);
 
 -- Documents: Vector store for RAG (from template)
-CREATE TABLE IF NOT EXISTS daa_documents (
+CREATE TABLE IF NOT EXISTS limitless_documents (
     id BIGSERIAL PRIMARY KEY,
 
     content TEXT NOT NULL,
@@ -123,19 +124,19 @@ CREATE TABLE IF NOT EXISTS daa_documents (
 );
 
 -- Create vector index for similarity search
-CREATE INDEX idx_documents_embedding ON daa_documents
+CREATE INDEX idx_documents_embedding ON limitless_documents
 USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
-CREATE INDEX idx_documents_metadata ON daa_documents USING GIN (metadata);
+CREATE INDEX idx_documents_metadata ON limitless_documents USING GIN (metadata);
 
 -- ============================================================================
 -- MONITORING TABLES
 -- ============================================================================
 
 -- Agent Runs: Track agent performance
-CREATE TABLE IF NOT EXISTS daa_agent_runs (
+CREATE TABLE IF NOT EXISTS limitless_agent_runs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    task_id UUID REFERENCES daa_tasks(id) ON DELETE CASCADE,
+    task_id UUID REFERENCES limitless_tasks(id) ON DELETE CASCADE,
 
     agent_name VARCHAR(100) NOT NULL,
     model_name VARCHAR(100),
@@ -151,11 +152,11 @@ CREATE TABLE IF NOT EXISTS daa_agent_runs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_agent_runs_agent ON daa_agent_runs(agent_name);
-CREATE INDEX idx_agent_runs_created ON daa_agent_runs(created_at DESC);
+CREATE INDEX idx_agent_runs_agent ON limitless_agent_runs(agent_name);
+CREATE INDEX idx_agent_runs_created ON limitless_agent_runs(created_at DESC);
 
 -- Metrics: Aggregated metrics for dashboard
-CREATE TABLE IF NOT EXISTS daa_metrics (
+CREATE TABLE IF NOT EXISTS limitless_metrics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     metric_name VARCHAR(100) NOT NULL,
@@ -170,8 +171,8 @@ CREATE TABLE IF NOT EXISTS daa_metrics (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_metrics_name ON daa_metrics(metric_name);
-CREATE INDEX idx_metrics_period ON daa_metrics(period_start, period_end);
+CREATE INDEX idx_metrics_name ON limitless_metrics(metric_name);
+CREATE INDEX idx_metrics_period ON limitless_metrics(period_start, period_end);
 
 -- ============================================================================
 -- FUNCTIONS
@@ -198,7 +199,7 @@ AS $$
         metadata,
         embedding,
         1 - (embedding <#> query_embedding) AS similarity
-    FROM daa_documents
+    FROM limitless_documents
     WHERE (filter IS NULL OR filter = '{}'::JSONB OR metadata @> filter)
     ORDER BY embedding <#> query_embedding
     LIMIT match_count;
@@ -218,7 +219,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_execution_timestamp
-    BEFORE UPDATE ON daa_executions
+    BEFORE UPDATE ON limitless_executions
     FOR EACH ROW
     EXECUTE FUNCTION update_execution_timestamp();
 
@@ -235,7 +236,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_task_duration
-    BEFORE UPDATE ON daa_tasks
+    BEFORE UPDATE ON limitless_tasks
     FOR EACH ROW
     EXECUTE FUNCTION update_task_duration();
 
@@ -244,7 +245,7 @@ CREATE TRIGGER trigger_task_duration
 -- ============================================================================
 
 -- View for execution summary
-CREATE OR REPLACE VIEW daa_execution_summary AS
+CREATE OR REPLACE VIEW limitless_execution_summary AS
 SELECT
     e.id,
     e.goal,
@@ -259,12 +260,12 @@ SELECT
     SUM(t.tokens_input) AS total_tokens_input,
     SUM(t.tokens_output) AS total_tokens_output,
     SUM(t.cost_usd) AS total_cost_usd
-FROM daa_executions e
-LEFT JOIN daa_tasks t ON e.id = t.execution_id
+FROM limitless_executions e
+LEFT JOIN limitless_tasks t ON e.id = t.execution_id
 GROUP BY e.id;
 
 -- View for agent performance
-CREATE OR REPLACE VIEW daa_agent_performance AS
+CREATE OR REPLACE VIEW limitless_agent_performance AS
 SELECT
     agent_name,
     COUNT(*) AS total_runs,
@@ -273,12 +274,12 @@ SELECT
     AVG(execution_time_ms) AS avg_execution_time_ms,
     SUM(tokens_input) AS total_tokens_input,
     SUM(tokens_output) AS total_tokens_output
-FROM daa_agent_runs
+FROM limitless_agent_runs
 GROUP BY agent_name
 ORDER BY total_runs DESC;
 
 -- View for daily metrics
-CREATE OR REPLACE VIEW daa_daily_metrics AS
+CREATE OR REPLACE VIEW limitless_daily_metrics AS
 SELECT
     DATE(created_at) AS date,
     COUNT(*) AS total_executions,
@@ -288,7 +289,7 @@ SELECT
           NULLIF(COUNT(*), 0) * 100, 2) AS success_rate,
     AVG(duration_ms) AS avg_duration_ms,
     AVG(iteration_count) AS avg_iterations
-FROM daa_executions
+FROM limitless_executions
 WHERE created_at >= NOW() - INTERVAL '30 days'
 GROUP BY DATE(created_at)
 ORDER BY date DESC;
@@ -298,17 +299,17 @@ ORDER BY date DESC;
 -- ============================================================================
 
 -- Enable RLS on tables (uncomment if needed)
--- ALTER TABLE daa_executions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE daa_tasks ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE daa_memory ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE daa_documents ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE limitless_executions ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE limitless_tasks ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE limitless_memory ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE limitless_documents ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
 -- INITIAL DATA
 -- ============================================================================
 
 -- Insert initial memory entries
-INSERT INTO daa_memory (key, value, memory_type, importance) VALUES
+INSERT INTO limitless_memory (key, value, memory_type, importance) VALUES
 ('system_version', '"1.0.0"', 'general', 1.0),
 ('agents_available', '27', 'general', 1.0),
 ('skills_available', '27', 'general', 1.0),

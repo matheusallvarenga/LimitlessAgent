@@ -171,38 +171,42 @@ mindmap
 
 ```mermaid
 erDiagram
-    EXECUTIONS ||--o{ TASKS : contains
-    EXECUTIONS {
+    limitless_executions ||--o{ limitless_tasks : contains
+    limitless_executions {
         uuid id PK
         text goal
-        varchar status
+        varchar status "pending|running|completed|failed|cancelled"
         timestamp started_at
         timestamp completed_at
+        int duration_ms
         int iteration_count
-        int max_iterations
+        int max_iterations "default: 100"
         jsonb result
         text error
         jsonb metadata
     }
 
-    TASKS ||--o{ AGENT_RUNS : has
-    TASKS {
+    limitless_tasks ||--o{ limitless_agent_runs : has
+    limitless_tasks ||--o| limitless_tasks : subtask_of
+    limitless_tasks {
         uuid id PK
         uuid execution_id FK
+        uuid parent_task_id FK "self-reference for subtasks"
         varchar name
         text description
-        varchar status
-        varchar agent_name
-        varchar model_used
+        varchar status "pending|running|completed|failed|skipped"
+        varchar agent_name "e.g. fullstack-developer"
+        varchar model_used "e.g. claude-opus-4-5"
         jsonb input
         jsonb output
         int tokens_input
         int tokens_output
         decimal cost_usd
         int duration_ms
+        int sequence_order
     }
 
-    AGENT_RUNS {
+    limitless_agent_runs {
         uuid id PK
         uuid task_id FK
         varchar agent_name
@@ -214,31 +218,37 @@ erDiagram
         text error
     }
 
-    MEMORY {
+    limitless_memory {
         uuid id PK
-        varchar key UK
+        varchar key UK "unique key for lookup"
         jsonb value
-        varchar memory_type
-        decimal importance
+        varchar memory_type "general|session|user_preference|learned_pattern"
+        decimal importance "0.0-1.0 for pruning"
         int access_count
+        timestamp last_accessed_at
         timestamp expires_at
     }
 
-    DOCUMENTS {
+    limitless_documents {
         bigint id PK
         text content
         jsonb metadata
-        vector embedding
+        vector embedding "768 dims (Gemini) or 1536 (OpenAI)"
+        varchar doc_id
+        varchar doc_title
         varchar doc_type
         varchar source
         boolean processed
+        varchar enricher_version
+        timestamp enriched_at
     }
 
-    METRICS {
+    limitless_metrics {
         uuid id PK
         varchar metric_name
         decimal metric_value
         varchar dimension
+        varchar dimension_value
         timestamp period_start
         timestamp period_end
     }

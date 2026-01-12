@@ -1,10 +1,10 @@
 {
-  "name": "DAA Monitor - Do Anything Agent Monitoring",
+  "name": "Limitless Monitor - Agent Monitoring System",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "daa-monitor",
+        "path": "limitless-monitor",
         "responseMode": "lastNode",
         "options": {}
       },
@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "position": [0, 300],
       "typeVersion": 2,
-      "webhookId": "daa-monitor-webhook"
+      "webhookId": "limitless-monitor-webhook"
     },
     {
       "parameters": {
@@ -131,7 +131,7 @@
             },
             {
               "id": "version",
-              "name": "daa_version",
+              "name": "limitless_version",
               "type": "string",
               "value": "1.0.0"
             },
@@ -179,8 +179,8 @@
     },
     {
       "parameters": {
-        "content": "## DAA Monitor Workflow\n\nThis workflow provides monitoring and debugging capabilities for the Do Anything Agent.\n\n### Available Actions:\n- `get_active_workflows`: List all active n8n workflows\n- `get_workflow_executions`: Get recent execution history with KPIs\n- `get_execution_details`: Get detailed info about a specific execution\n- `health_check`: Check n8n and DAA health status\n\n### Usage:\nPOST to webhook with:\n```json\n{\n  \"action\": \"health_check\"\n}\n```",
-        "height": 400,
+        "content": "## Limitless Agent Monitor Workflow\n\n\"What if you could access 100% of your brain?\"\n\nThis workflow provides monitoring and debugging capabilities for the Limitless Agent.\n\n### Available Actions:\n- `get_active_workflows`: List all active n8n workflows\n- `get_workflow_executions`: Get recent execution history with KPIs\n- `get_execution_details`: Get detailed info about a specific execution\n- `health_check`: Check n8n and Limitless Agent health status\n\n### Usage:\nPOST to webhook with:\n```json\n{\n  \"action\": \"health_check\"\n}\n```",
+        "height": 450,
         "width": 350,
         "color": 4
       },
@@ -219,7 +219,7 @@
     "templateCredsSetupCompleted": true
   },
   "tags": [
-    { "name": "DAA" },
+    { "name": "Limitless" },
     { "name": "Monitoring" },
     { "name": "MCP" }
   ]

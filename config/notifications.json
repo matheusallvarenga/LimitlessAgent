@@ -6,9 +6,9 @@
     "enabled": true,
     "priority": 1,
     "webhook_url": "${SLACK_WEBHOOK_URL}",
-    "channel": "#daa-notifications",
-    "username": "Do Anything Agent",
-    "icon_emoji": ":robot_face:",
+    "channel": "#limitless-notifications",
+    "username": "Limitless Agent",
+    "icon_emoji": ":brain:",
     "events": {
       "task_started": {
         "enabled": true,
@@ -29,7 +29,7 @@
       "daily_summary": {
         "enabled": true,
         "time": "09:00",
-        "template": ":chart_with_upwards_trend: *Daily DAA Summary*\n*Tasks Completed*: {{completed}}\n*Tasks Failed*: {{failed}}\n*Success Rate*: {{success_rate}}%"
+        "template": ":chart_with_upwards_trend: *Daily Limitless Summary*\n*Tasks Completed*: {{completed}}\n*Tasks Failed*: {{failed}}\n*Success Rate*: {{success_rate}}%"
       }
     }
   },
