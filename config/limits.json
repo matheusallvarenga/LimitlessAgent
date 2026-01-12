@@ -1,0 +1,144 @@
+{
+  "$schema": "./limits.schema.json",
+  "version": "1.0.0",
+  "description": "Safety limits and guardrails for Limitless Agent",
+
+  "execution": {
+    "max_iterations": 100,
+    "max_iterations_warning": 50,
+    "timeout_per_iteration_ms": 300000,
+    "total_timeout_ms": 3600000
+  },
+
+  "cost": {
+    "max_cost_per_execution_usd": 10.00,
+    "max_cost_per_day_usd": 50.00,
+    "max_cost_per_month_usd": 500.00,
+    "warning_threshold_percent": 80
+  },
+
+  "tokens": {
+    "max_tokens_per_execution": 500000,
+    "max_tokens_per_iteration": 100000,
+    "max_context_tokens": 200000
+  },
+
+  "rate_limiting": {
+    "global_rpm": 100,
+    "per_provider": {
+      "claude": {
+        "rpm": 60,
+        "daily_limit": null
+      },
+      "ollama": {
+        "rpm": 100,
+        "daily_limit": null
+      },
+      "gemini": {
+        "rpm": 60,
+        "daily_limit": 1000
+      },
+      "openai": {
+        "rpm": 60,
+        "daily_limit": null
+      }
+    },
+    "cooldown_seconds": 60,
+    "retry_attempts": 3,
+    "retry_backoff_multiplier": 2
+  },
+
+  "circuit_breaker": {
+    "enabled": true,
+    "consecutive_failures_threshold": 3,
+    "same_error_threshold": 2,
+    "reset_timeout_seconds": 300,
+    "half_open_requests": 1
+  },
+
+  "risk_classification": {
+    "low": {
+      "actions": ["read", "search", "list", "analyze", "plan"],
+      "auto_approve": true,
+      "notify": false
+    },
+    "medium": {
+      "actions": ["write", "edit", "create", "modify", "test"],
+      "auto_approve": true,
+      "notify": true
+    },
+    "high": {
+      "actions": ["delete", "deploy", "push", "publish", "execute", "install"],
+      "auto_approve": false,
+      "notify": true,
+      "require_confirmation": true,
+      "confirmation_timeout_seconds": 300
+    }
+  },
+
+  "blocked_patterns": {
+    "enabled": true,
+    "patterns": [
+      "rm -rf /",
+      "rm -rf /*",
+      "sudo rm",
+      "format c:",
+      "mkfs",
+      "dd if=/dev/zero",
+      ":(){ :|:& };:",
+      "> /dev/sda",
+      "chmod -R 777 /",
+      "DELETE FROM .* WHERE 1=1",
+      "DROP DATABASE",
+      "DROP TABLE",
+      "TRUNCATE TABLE",
+      "eval\\s*\\(",
+      "exec\\s*\\(",
+      "os\\.system\\s*\\(",
+      "__import__\\s*\\(",
+      "curl.*\\|.*sh",
+      "wget.*\\|.*sh"
+    ],
+    "case_sensitive": false
+  },
+
+  "allowed_directories": {
+    "read": ["*"],
+    "write": [
+      ".",
+      "./src",
+      "./tests",
+      "./docs",
+      "./config",
+      "/tmp/limitless"
+    ],
+    "execute": [
+      "./scripts",
+      "/tmp/limitless"
+    ]
+  },
+
+  "notifications": {
+    "on_start": true,
+    "on_complete": true,
+    "on_failure": true,
+    "on_high_risk": true,
+    "on_cost_warning": true,
+    "on_circuit_breaker": true
+  },
+
+  "logging": {
+    "level": "info",
+    "include_tokens": true,
+    "include_cost": true,
+    "include_timing": true,
+    "retention_days": 30
+  },
+
+  "audit": {
+    "enabled": true,
+    "log_all_actions": true,
+    "log_all_responses": false,
+    "tamper_evident": false
+  }
+}

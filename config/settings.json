@@ -1,0 +1,128 @@
+{
+  "version": "1.0.0",
+  "name": "Limitless Agent",
+  "description": "Autonomous agent system - unlock 100% of your AI potential",
+  "tagline": "What if you could access 100% of your brain?",
+
+  "core": {
+    "pattern": "ralph_loop",
+    "alias": "nzt_protocol",
+    "max_iterations": 100,
+    "iteration_timeout_ms": 300000,
+    "circuit_breaker": {
+      "enabled": true,
+      "max_failures": 5,
+      "reset_timeout_ms": 60000
+    }
+  },
+
+  "llm": {
+    "primary": {
+      "provider": "claude",
+      "model": "claude-opus-4-5-20251101",
+      "via": "cli",
+      "max_tokens": 8192
+    },
+    "fallback_chain": [
+      {
+        "provider": "ollama",
+        "endpoint": "https://ollama.intentum.ai",
+        "models": {
+          "quick": "llama3.2:3b",
+          "code": "codellama:13b",
+          "general": "mistral:7b"
+        }
+      },
+      {
+        "provider": "gemini",
+        "model": "gemini-pro",
+        "via": "google_workspace"
+      },
+      {
+        "provider": "openai",
+        "model": "gpt-4-turbo",
+        "via": "chatgpt_business"
+      }
+    ]
+  },
+
+  "database": {
+    "provider": "supabase",
+    "type": "cloud",
+    "features": ["postgresql", "pgvector"],
+    "tables": {
+      "executions": "limitless_executions",
+      "tasks": "limitless_tasks",
+      "memory": "limitless_memory",
+      "documents": "limitless_documents",
+      "agent_runs": "limitless_agent_runs",
+      "metrics": "limitless_metrics"
+    }
+  },
+
+  "orchestration": {
+    "provider": "n8n",
+    "endpoint": "https://n8n.intentum.pro",
+    "workflows": {
+      "monitor": "limitless-monitor",
+      "notify": "limitless-notify",
+      "trigger": "limitless-trigger"
+    },
+    "mcp": {
+      "enabled": true,
+      "routes": [
+        "get_active_workflows",
+        "get_workflow_executions",
+        "get_execution_details"
+      ]
+    }
+  },
+
+  "notifications": {
+    "channels": ["slack", "telegram"],
+    "priority_order": ["slack", "telegram"],
+    "slack_channel": "#limitless-notifications",
+    "events": {
+      "task_started": true,
+      "task_completed": true,
+      "task_failed": true,
+      "approval_required": true,
+      "daily_summary": true
+    }
+  },
+
+  "agents": {
+    "pool_size": 27,
+    "categories": {
+      "development": ["fullstack-developer", "frontend-developer", "backend-architect", "code-reviewer", "task-decomposition-expert"],
+      "research": ["competitive-intelligence-analyst", "market-research-analyst", "seo-analyzer", "sales-automator"],
+      "content": ["social-media-copywriter", "podcast-content-analyzer", "podcast-metadata-specialist", "podcast-trend-scout", "content-curator", "video-editor"],
+      "pkm": ["connection-agent", "moc-agent", "metadata-agent", "tag-agent", "review-agent"],
+      "design": ["cli-ui-designer", "ui-ux-designer", "timestamp-precision-specialist"],
+      "utility": ["context-manager", "visual-analysis-ocr", "prompt-engineer"]
+    }
+  },
+
+  "safety": {
+    "human_in_the_loop": {
+      "enabled": true,
+      "risk_levels": {
+        "LOW": { "auto_approve": true },
+        "MEDIUM": { "auto_approve": false, "timeout_minutes": 30 },
+        "HIGH": { "auto_approve": false, "timeout_minutes": 0 }
+      }
+    },
+    "blocked_operations": [
+      "rm -rf /",
+      "DROP DATABASE",
+      "DELETE FROM * WHERE 1=1"
+    ]
+  },
+
+  "logging": {
+    "level": "INFO",
+    "destinations": ["console", "supabase", "file"],
+    "file_path": "logs/limitless.log",
+    "retention_days": 30
+  }
+}

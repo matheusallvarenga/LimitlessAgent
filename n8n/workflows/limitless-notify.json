@@ -1,0 +1,270 @@
+{
+  "name": "DAA Notify - Do Anything Agent Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "daa-notify",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300],
+      "typeVersion": 2,
+      "webhookId": "daa-notify-webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.event }}", "rightValue": "task_started", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "task_started"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.event }}", "rightValue": "task_completed", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "task_completed"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.event }}", "rightValue": "task_failed", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "task_failed"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.event }}", "rightValue": "approval_required", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "approval_required"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "event-router",
+      "name": "Route Event",
+      "type": "n8n-nodes-base.switch",
+      "position": [220, 300],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#daa-notifications"
+        },
+        "text": "=:rocket: *Task Started*\n*Goal*: {{ $json.goal }}\n*Execution ID*: `{{ $json.execution_id }}`\n*Time*: {{ $now.toISO() }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "slack-started",
+      "name": "Slack - Task Started",
+      "type": "n8n-nodes-base.slack",
+      "position": [500, 100],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#daa-notifications"
+        },
+        "text": "=:white_check_mark: *Task Completed*\n*Goal*: {{ $json.goal }}\n*Duration*: {{ $json.duration }}\n*Iterations*: {{ $json.iterations }}",
+        "otherOptions": {}
+      },
+      "id": "slack-completed",
+      "name": "Slack - Task Completed",
+      "type": "n8n-nodes-base.slack",
+      "position": [500, 260],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#daa-notifications"
+        },
+        "text": "=:x: *Task Failed*\n*Goal*: {{ $json.goal }}\n*Error*: {{ $json.error }}\n*Iteration*: {{ $json.iteration }}/{{ $json.max_iterations }}",
+        "otherOptions": {}
+      },
+      "id": "slack-failed",
+      "name": "Slack - Task Failed",
+      "type": "n8n-nodes-base.slack",
+      "position": [500, 420],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "#daa-notifications"
+        },
+        "text": "=:warning: *Approval Required*\n*Action*: {{ $json.action }}\n*Risk Level*: {{ $json.risk_level }}\n*Timeout*: {{ $json.timeout }} minutes\n\nReply with :+1: to approve or :-1: to reject",
+        "otherOptions": {}
+      },
+      "id": "slack-approval",
+      "name": "Slack - Approval Required",
+      "type": "n8n-nodes-base.slack",
+      "position": [500, 580],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=:rocket: *Task Started*\n*Goal*: {{ $json.goal }}\n*ID*: `{{ $json.execution_id }}`",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-started",
+      "name": "Telegram - Task Started",
+      "type": "n8n-nodes-base.telegram",
+      "position": [740, 100],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=:white_check_mark: *Task Completed*\n*Goal*: {{ $json.goal }}\n*Duration*: {{ $json.duration }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-completed",
+      "name": "Telegram - Task Completed",
+      "type": "n8n-nodes-base.telegram",
+      "position": [740, 260],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=:x: *Task Failed*\n*Goal*: {{ $json.goal }}\n*Error*: {{ $json.error }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-failed",
+      "name": "Telegram - Task Failed",
+      "type": "n8n-nodes-base.telegram",
+      "position": [740, 420],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=:warning: *Approval Required*\n*Action*: {{ $json.action }}\n*Risk*: {{ $json.risk_level }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-approval",
+      "name": "Telegram - Approval Required",
+      "type": "n8n-nodes-base.telegram",
+      "position": [740, 580],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"event\": \"{{ $json.event }}\", \"timestamp\": \"{{ $now.toISO() }}\" }",
+        "options": {}
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [980, 300],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## DAA Notify Workflow\n\nSends notifications to Slack (primary) and Telegram (backup).\n\n### Events:\n- `task_started`: New task initiated\n- `task_completed`: Task finished successfully\n- `task_failed`: Task failed\n- `approval_required`: Human approval needed\n\n### Payload Example:\n```json\n{\n  \"event\": \"task_started\",\n  \"goal\": \"Create user authentication\",\n  \"execution_id\": \"uuid-here\"\n}\n```",
+        "height": 400,
+        "width": 350,
+        "color": 6
+      },
+      "id": "documentation",
+      "name": "Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-350, 100],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Route Event", "type": "main", "index": 0 }]]
+    },
+    "Route Event": {
+      "main": [
+        [{ "node": "Slack - Task Started", "type": "main", "index": 0 }],
+        [{ "node": "Slack - Task Completed", "type": "main", "index": 0 }],
+        [{ "node": "Slack - Task Failed", "type": "main", "index": 0 }],
+        [{ "node": "Slack - Approval Required", "type": "main", "index": 0 }]
+      ]
+    },
+    "Slack - Task Started": {
+      "main": [[{ "node": "Telegram - Task Started", "type": "main", "index": 0 }]]
+    },
+    "Slack - Task Completed": {
+      "main": [[{ "node": "Telegram - Task Completed", "type": "main", "index": 0 }]]
+    },
+    "Slack - Task Failed": {
+      "main": [[{ "node": "Telegram - Task Failed", "type": "main", "index": 0 }]]
+    },
+    "Slack - Approval Required": {
+      "main": [[{ "node": "Telegram - Approval Required", "type": "main", "index": 0 }]]
+    },
+    "Telegram - Task Started": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Telegram - Task Completed": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Telegram - Task Failed": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Telegram - Approval Required": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    { "name": "DAA" },
+    { "name": "Notifications" },
+    { "name": "Slack" },
+    { "name": "Telegram" }
+  ]
+}

@@ -1,0 +1,261 @@
+{
+  "name": "Limitless Trigger - External Task Initiation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "limitless-trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300],
+      "typeVersion": 2,
+      "webhookId": "limitless-trigger-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate incoming request\nconst body = $input.first().json;\n\n// Check required fields\nif (!body.goal || typeof body.goal !== 'string' || body.goal.trim() === '') {\n  return [{\n    json: {\n      success: false,\n      error: 'Goal is required and must be a non-empty string',\n      code: 'VALIDATION_ERROR'\n    }\n  }];\n}\n\n// Set defaults for options\nconst options = body.options || {};\nconst maxIterations = options.max_iterations || 100;\nconst notify = options.notify !== false;\nconst priority = options.priority || 'normal';\n\n// Validate max_iterations\nif (maxIterations < 1 || maxIterations > 1000) {\n  return [{\n    json: {\n      success: false,\n      error: 'max_iterations must be between 1 and 1000',\n      code: 'VALIDATION_ERROR'\n    }\n  }];\n}\n\n// Validate priority\nif (!['low', 'normal', 'high'].includes(priority)) {\n  return [{\n    json: {\n      success: false,\n      error: 'priority must be one of: low, normal, high',\n      code: 'VALIDATION_ERROR'\n    }\n  }];\n}\n\n// Generate execution ID\nconst executionId = $env.EXECUTION_ID || crypto.randomUUID();\n\nreturn [{\n  json: {\n    valid: true,\n    execution_id: executionId,\n    goal: body.goal.trim(),\n    options: {\n      max_iterations: maxIterations,\n      notify: notify,\n      priority: priority\n    },\n    metadata: body.metadata || {},\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "validate-request",
+      "name": "Validate Request",
+      "type": "n8n-nodes-base.code",
+      "position": [220, 300],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-valid",
+      "name": "Is Valid?",
+      "type": "n8n-nodes-base.if",
+      "position": [440, 300],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/limitless_executions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "={{ $json.execution_id }}"
+            },
+            {
+              "name": "goal",
+              "value": "={{ $json.goal }}"
+            },
+            {
+              "name": "status",
+              "value": "pending"
+            },
+            {
+              "name": "max_iterations",
+              "value": "={{ $json.options.max_iterations }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ JSON.stringify($json.metadata) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-execution",
+      "name": "Create Execution Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [660, 200],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "command": "={{ $env.LIMITLESS_HOME || '/path/to/limitless-agent' }}/scripts/limitless.sh run \"{{ $json.goal }}\" {{ $json.options.max_iterations }} &",
+        "options": {}
+      },
+      "id": "start-execution",
+      "name": "Start Limitless Agent",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [880, 200],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.options.notify }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "should-notify",
+      "name": "Should Notify?",
+      "type": "n8n-nodes-base.if",
+      "position": [1100, 200],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_BASE }}/limitless-notify",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "task_started"
+            },
+            {
+              "name": "goal",
+              "value": "={{ $json.goal }}"
+            },
+            {
+              "name": "execution_id",
+              "value": "={{ $json.execution_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-start",
+      "name": "Send Start Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1320, 100],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"execution_id\": \"{{ $json.execution_id }}\", \"status\": \"started\", \"timestamp\": \"{{ $now.toISO() }}\" }",
+        "options": {}
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1540, 200],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "respond-error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [660, 400],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## Limitless Trigger Workflow\n\nTriggers new Limitless Agent executions via webhook.\n\n### Endpoint\nPOST /webhook/limitless-trigger\n\n### Request Body\n```json\n{\n  \"goal\": \"Your goal here\",\n  \"options\": {\n    \"max_iterations\": 100,\n    \"notify\": true,\n    \"priority\": \"normal\"\n  },\n  \"metadata\": {}\n}\n```\n\n### Response\n```json\n{\n  \"success\": true,\n  \"execution_id\": \"uuid\",\n  \"status\": \"started\",\n  \"timestamp\": \"ISO8601\"\n}\n```",
+        "height": 450,
+        "width": 350,
+        "color": 5
+      },
+      "id": "documentation",
+      "name": "Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-350, 50],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Validate Request", "type": "main", "index": 0 }]]
+    },
+    "Validate Request": {
+      "main": [[{ "node": "Is Valid?", "type": "main", "index": 0 }]]
+    },
+    "Is Valid?": {
+      "main": [
+        [{ "node": "Create Execution Record", "type": "main", "index": 0 }],
+        [{ "node": "Respond Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Execution Record": {
+      "main": [[{ "node": "Start Limitless Agent", "type": "main", "index": 0 }]]
+    },
+    "Start Limitless Agent": {
+      "main": [[{ "node": "Should Notify?", "type": "main", "index": 0 }]]
+    },
+    "Should Notify?": {
+      "main": [
+        [{ "node": "Send Start Notification", "type": "main", "index": 0 }],
+        [{ "node": "Respond Success", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Start Notification": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    { "name": "Limitless" },
+    { "name": "Trigger" },
+    { "name": "Automation" }
+  ]
+}

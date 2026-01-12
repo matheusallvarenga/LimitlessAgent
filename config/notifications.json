@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "priority_order": ["slack", "telegram"],
+
+  "slack": {
+    "enabled": true,
+    "priority": 1,
+    "webhook_url": "${SLACK_WEBHOOK_URL}",
+    "channel": "#daa-notifications",
+    "username": "Do Anything Agent",
+    "icon_emoji": ":robot_face:",
+    "events": {
+      "task_started": {
+        "enabled": true,
+        "template": ":rocket: *Task Started*\n*Goal*: {{goal}}\n*Execution ID*: {{execution_id}}\n*Time*: {{timestamp}}"
+      },
+      "task_completed": {
+        "enabled": true,
+        "template": ":white_check_mark: *Task Completed*\n*Goal*: {{goal}}\n*Duration*: {{duration}}\n*Status*: SUCCESS"
+      },
+      "task_failed": {
+        "enabled": true,
+        "template": ":x: *Task Failed*\n*Goal*: {{goal}}\n*Error*: {{error}}\n*Iteration*: {{iteration}}/{{max_iterations}}"
+      },
+      "approval_required": {
+        "enabled": true,
+        "template": ":warning: *Approval Required*\n*Action*: {{action}}\n*Risk Level*: {{risk_level}}\n*Timeout*: {{timeout}} minutes"
+      },
+      "daily_summary": {
+        "enabled": true,
+        "time": "09:00",
+        "template": ":chart_with_upwards_trend: *Daily DAA Summary*\n*Tasks Completed*: {{completed}}\n*Tasks Failed*: {{failed}}\n*Success Rate*: {{success_rate}}%"
+      }
+    }
+  },
+
+  "telegram": {
+    "enabled": true,
+    "priority": 2,
+    "bot_token": "${TELEGRAM_BOT_TOKEN}",
+    "chat_id": "${TELEGRAM_CHAT_ID}",
+    "parse_mode": "Markdown",
+    "events": {
+      "task_started": {
+        "enabled": true,
+        "template": "🚀 *Task Started*\n*Goal*: {{goal}}\n*ID*: `{{execution_id}}`"
+      },
+      "task_completed": {
+        "enabled": true,
+        "template": "✅ *Task Completed*\n*Goal*: {{goal}}\n*Duration*: {{duration}}"
+      },
+      "task_failed": {
+        "enabled": true,
+        "template": "❌ *Task Failed*\n*Goal*: {{goal}}\n*Error*: {{error}}"
+      },
+      "approval_required": {
+        "enabled": true,
+        "template": "⚠️ *Approval Required*\n*Action*: {{action}}\n*Risk*: {{risk_level}}"
+      },
+      "daily_summary": {
+        "enabled": false
+      }
+    }
+  },
+
+  "fallback_behavior": {
+    "on_primary_failure": "try_next",
+    "max_retries": 3,
+    "retry_delay_ms": 5000
+  }
+}

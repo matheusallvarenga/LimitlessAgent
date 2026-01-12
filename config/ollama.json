@@ -1,0 +1,79 @@
+{
+  "version": "1.0.0",
+  "endpoint": "https://ollama.intentum.ai",
+  "timeout_ms": 60000,
+
+  "models": {
+    "llama3.2:3b": {
+      "name": "llama3.2:3b",
+      "size_gb": 2,
+      "context_length": 8192,
+      "use_cases": ["quick_tasks", "simple_queries", "fallback"],
+      "priority": 1,
+      "temperature": 0.7,
+      "top_p": 0.9
+    },
+    "codellama:13b": {
+      "name": "codellama:13b",
+      "size_gb": 7,
+      "context_length": 16384,
+      "use_cases": ["code_generation", "code_review", "debugging"],
+      "priority": 2,
+      "temperature": 0.3,
+      "top_p": 0.95
+    },
+    "mistral:7b": {
+      "name": "mistral:7b",
+      "size_gb": 4,
+      "context_length": 8192,
+      "use_cases": ["general_reasoning", "analysis", "fallback"],
+      "priority": 3,
+      "temperature": 0.7,
+      "top_p": 0.9
+    }
+  },
+
+  "routing": {
+    "strategy": "task_based",
+    "rules": [
+      {
+        "task_type": "quick_query",
+        "model": "llama3.2:3b",
+        "reason": "Fast response for simple tasks"
+      },
+      {
+        "task_type": "code_generation",
+        "model": "codellama:13b",
+        "reason": "Specialized for code tasks"
+      },
+      {
+        "task_type": "code_review",
+        "model": "codellama:13b",
+        "reason": "Better code understanding"
+      },
+      {
+        "task_type": "general",
+        "model": "mistral:7b",
+        "reason": "Balanced performance"
+      },
+      {
+        "task_type": "fallback",
+        "model": "llama3.2:3b",
+        "reason": "Fastest available model"
+      }
+    ]
+  },
+
+  "health_check": {
+    "enabled": true,
+    "interval_seconds": 300,
+    "endpoint": "/api/tags"
+  },
+
+  "api": {
+    "generate": "/api/generate",
+    "chat": "/api/chat",
+    "embeddings": "/api/embeddings",
+    "models": "/api/tags"
+  }
+}

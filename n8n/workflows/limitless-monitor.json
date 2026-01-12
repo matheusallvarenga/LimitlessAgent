@@ -1,0 +1,226 @@
+{
+  "name": "DAA Monitor - Do Anything Agent Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "daa-monitor",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300],
+      "typeVersion": 2,
+      "webhookId": "daa-monitor-webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "get_active_workflows", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get_active_workflows"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "get_workflow_executions", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get_workflow_executions"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "get_execution_details", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get_execution_details"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+                "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "health_check", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "health_check"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "action-router",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "position": [220, 300],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "get-workflows",
+      "name": "Get Active Workflows",
+      "type": "n8n-nodes-base.n8n",
+      "position": [460, 100],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {
+          "status": "={{ $json.status || 'all' }}"
+        },
+        "limit": "={{ $json.limit || 25 }}",
+        "requestOptions": {}
+      },
+      "id": "get-executions",
+      "name": "Get Workflow Executions",
+      "type": "n8n-nodes-base.n8n",
+      "position": [460, 260],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "executionId": "={{ $json.execution_id }}",
+        "requestOptions": {}
+      },
+      "id": "get-details",
+      "name": "Get Execution Details",
+      "type": "n8n-nodes-base.n8n",
+      "position": [460, 420],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate health KPIs\nconst executions = $input.all();\n\nconst total = executions.length;\nconst successful = executions.filter(e => e.json.finished && !e.json.stoppedAt).length;\nconst failed = executions.filter(e => e.json.stoppedAt).length;\nconst running = executions.filter(e => !e.json.finished && !e.json.stoppedAt).length;\n\nconst successRate = total > 0 ? (successful / total * 100).toFixed(2) : 0;\n\nconst avgDuration = executions\n  .filter(e => e.json.finished)\n  .reduce((acc, e) => {\n    const start = new Date(e.json.startedAt);\n    const end = new Date(e.json.stoppedAt || e.json.finishedAt);\n    return acc + (end - start);\n  }, 0) / (successful + failed || 1);\n\nlet healthStatus = '🟢';\nif (successRate < 90) healthStatus = '🟡';\nif (successRate < 70) healthStatus = '🔴';\n\nreturn [{\n  json: {\n    health_status: healthStatus,\n    total_executions: total,\n    successful: successful,\n    failed: failed,\n    running: running,\n    success_rate: parseFloat(successRate),\n    avg_duration_ms: Math.round(avgDuration),\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "calculate-kpis",
+      "name": "Calculate KPIs",
+      "type": "n8n-nodes-base.code",
+      "position": [700, 260],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "health-status",
+              "name": "status",
+              "type": "string",
+              "value": "healthy"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "version",
+              "name": "daa_version",
+              "type": "string",
+              "value": "1.0.0"
+            },
+            {
+              "id": "n8n-status",
+              "name": "n8n_status",
+              "type": "string",
+              "value": "connected"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "health-response",
+      "name": "Health Check Response",
+      "type": "n8n-nodes-base.set",
+      "position": [460, 580],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "workflows",
+              "name": "workflows",
+              "type": "array",
+              "value": "={{ $json }}"
+            },
+            {
+              "id": "count",
+              "name": "count",
+              "type": "number",
+              "value": "={{ $input.all().length }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-workflows",
+      "name": "Format Workflows Response",
+      "type": "n8n-nodes-base.set",
+      "position": [700, 100],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## DAA Monitor Workflow\n\nThis workflow provides monitoring and debugging capabilities for the Do Anything Agent.\n\n### Available Actions:\n- `get_active_workflows`: List all active n8n workflows\n- `get_workflow_executions`: Get recent execution history with KPIs\n- `get_execution_details`: Get detailed info about a specific execution\n- `health_check`: Check n8n and DAA health status\n\n### Usage:\nPOST to webhook with:\n```json\n{\n  \"action\": \"health_check\"\n}\n```",
+        "height": 400,
+        "width": 350,
+        "color": 4
+      },
+      "id": "documentation",
+      "name": "Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-300, 100],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]]
+    },
+    "Route Action": {
+      "main": [
+        [{ "node": "Get Active Workflows", "type": "main", "index": 0 }],
+        [{ "node": "Get Workflow Executions", "type": "main", "index": 0 }],
+        [{ "node": "Get Execution Details", "type": "main", "index": 0 }],
+        [{ "node": "Health Check Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Active Workflows": {
+      "main": [[{ "node": "Format Workflows Response", "type": "main", "index": 0 }]]
+    },
+    "Get Workflow Executions": {
+      "main": [[{ "node": "Calculate KPIs", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    { "name": "DAA" },
+    { "name": "Monitoring" },
+    { "name": "MCP" }
+  ]
+}
