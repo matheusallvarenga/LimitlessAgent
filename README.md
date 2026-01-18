@@ -15,11 +15,37 @@
 
 *Inspired by the film Limitless (2011) and the NZT-48 pill*
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/matheusallvarenga/limitless-agent)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-in%20development-yellow.svg)]()
+[![Status](https://img.shields.io/badge/status-integrated-green.svg)]()
+[![Supabase](https://img.shields.io/badge/Supabase-Ready-3ECF8E.svg)](https://supabase.com)
 
 </div>
+
+---
+
+## Real Life OS Integration
+
+LimitlessAgent is now integrated into the **Real Life OS** architecture as a domain (`limitless_`):
+
+| Resource | Value |
+|----------|-------|
+| **Supabase Project** | intentum |
+| **Tables** | 6 (limitless_*) |
+| **RLS** | 100% enabled |
+| **Status** | Ready v2.0.0 |
+
+```sql
+-- Tables deployed
+limitless_executions    -- Agent runs/goals
+limitless_tasks         -- Subtasks per execution
+limitless_memory        -- Persistent memory
+limitless_documents     -- RAG vector store
+limitless_agent_runs    -- Performance tracking
+limitless_metrics       -- Aggregated metrics
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for security migrations and v2.0.0 details.
 
 ---
 
@@ -362,8 +388,9 @@ gantt
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **Phase 1** | Foundation + n8n | In Progress |
-| **Phase 2** | Agent Integration | Pending |
+| **Phase 1** | Foundation + n8n | ✅ Complete |
+| **Phase 1.5** | Database Security + Real Life OS | ✅ Complete |
+| **Phase 2** | Agent Integration | In Progress |
 | **Phase 3** | Token Optimization | Pending |
 | **Phase 4** | Parallel Execution | Pending |
 | **Phase 5** | Memory & Learning | Pending |
